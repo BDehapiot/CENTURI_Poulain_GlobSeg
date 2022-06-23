@@ -1,6 +1,6 @@
 #%% Imports
 
-import napari
+# import napari
 import numpy as np
 from skimage import io 
 from pathlib import Path
@@ -19,13 +19,11 @@ X_paths = []; X = []
 Y_paths = []; Y = []
 for path in Path('data').iterdir():      
     if stack_path.stem in path.stem:
-        if 'crop' in path.stem:       
-            if 'labels' in path.stem:
-                Y_paths.append(path)
-                Y.append(io.imread(path))
-            else:
-                X_paths.append(path)
-                X.append(io.imread(path))
+        if 'crop' in path.stem and 'labels' not in path.stem: 
+            X_paths.append(path)
+            X.append(io.imread(X_paths[-1]))            
+            Y_paths.append(Path('data', path.stem + '_labels.tif'))
+            Y.append(io.imread(Y_paths[-1]))
                                
 #%% Fitting ground-truth labels with star-convex polygons
 
@@ -86,7 +84,6 @@ print('number of images: %3d' % len(X))
 print('- training:       %3d' % len(X_trn))
 print('- validation:     %3d' % len(X_val))
 
-
 def plot_img_label(img, lbl, img_title="image", lbl_title="label", **kwargs):
     fig, (ai,al) = plt.subplots(1,2, figsize=(12,5), gridspec_kw=dict(width_ratios=(1.25,1)))
     im = ai.imshow(img, cmap='gray', clim=(0,1))
@@ -96,15 +93,128 @@ def plot_img_label(img, lbl, img_title="image", lbl_title="label", **kwargs):
     al.set_title(lbl_title)
     plt.tight_layout()
     
-i = min(9, len(X)-1)
-img, lbl = X[i], Y[i]
-assert img.ndim in (2,3)
-img = img if (img.ndim==2 or img.shape[-1]==3) else img[...,0]
-plot_img_label(img,lbl)
-None;    
+# i = min(9, len(X)-1)
+# img, lbl = X[i], Y[i]
+# assert img.ndim in (2,3)
+# img = img if (img.ndim==2 or img.shape[-1]==3) else img[...,0]
+# plot_img_label(img,lbl)
+# None;    
 
-# X and Y do not correspond!
-i = 3
-plot_img_label(X[i],Y[i])
+#%%
+
+from stardist import gputools_available, calculate_extents
+from stardist.models import Config2D, StarDist2D
+
+conf = Config2D (
+    n_rays=32,
+    grid=(2,2),
+    use_gpu=True and gputools_available(),
+    n_channel_in=1,
+    train_epochs=50,
+    train_patch_size=(128,128),
+    )
+
+model = StarDist2D(conf, name='stardist', basedir='models')
+
+# median_size = calculate_extents(list(Y), np.median)
+# fov = np.array(model._axes_tile_overlap('YX'))
+# print(f"median object size:      {median_size}")
+# print(f"network field of view :  {fov}")
+# if any(median_size > fov):
+#     print("WARNING: median object size larger than field of view of the neural network.")
+
+#%%
+
+# import napari
+import random
+import albumentations as A
+
+# Data augmentation
+
+def _data_augmentation(raw, mask, operations):
+    
+    rand = random.randint(0, raw.shape[0]-1)
+    outputs = operations(image=raw[rand,:,:], mask=mask[rand,:,:])
+        
+    raw_aug = outputs['image']
+    mask_aug = outputs['mask']
+    
+    return raw_aug, mask_aug
+
+''' ........................................................................'''
+
+def data_augmentation(raw, mask, operations, iterations=256, parallel=True):
+    
+    if type(raw) == list:    
+        islist = 1
+        raw = np.rollaxis(np.dstack(raw),-1)
+        mask = np.rollaxis(np.dstack(mask),-1)
+    else:
+        islist = 0
+    
+    if parallel:
+ 
+        # Run _data_augmentation (parallel)
+        output_list = Parallel(n_jobs=-1)(
+            delayed(_data_augmentation)(
+                raw,
+                mask,
+                operations
+                )
+            for i in range(iterations)
+            )
+            
+    else:
+            
+        # Run _data_augmentation
+        output_list = [_data_augmentation(
+                raw,
+                mask,
+                operations
+                ) 
+            for i in range(iterations)
+            ]
+
+    # Extract outputs
+    if islist == 0:
+        raw_augmented = np.stack(
+            [arrays[0] for arrays in output_list],
+            axis=0
+            )
+        mask_augmented = np.stack(
+            [arrays[1] for arrays in output_list],
+            axis=0
+            )
+    else:
+        raw_augmented = [i[0] for i in output_list]
+        mask_augmented = [i[1] for i in output_list]
+    
+    return raw_augmented, mask_augmented
+
+# Define operations 
+operations = A.Compose([
+    A.VerticalFlip(p=0.5),              
+    # A.RandomRotate90(p=0.5),
+    A.HorizontalFlip(p=0.5),
+    # A.Transpose(p=0.5),
+    A.GridDistortion(p=0.5)
+    ]
+)
+
+X_trn_aug, Y_trn_aug = data_augmentation(
+    X_trn, Y_trn, operations, iterations=1000, parallel=False)
+
+#%%
+
+model.train(X_trn_aug, Y_trn_aug, validation_data=(X_val,Y_val), augmenter=None)
 
 
+#%%
+
+Y_val_pred = [model.predict_instances(
+    x, n_tiles=model._guess_n_tiles(x), 
+    show_tile_progress=False)[0]
+              for x in tqdm(X_val)]
+
+plot_img_label(X_val[0],Y_val[0], lbl_title="label GT")
+plot_img_label(X_val[0],Y_val_pred[0], lbl_title="label Pred")

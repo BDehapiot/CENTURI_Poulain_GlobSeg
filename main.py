@@ -63,11 +63,11 @@ for t in t_crop:
         ]
     
     io.imsave(
-        data_path / f'{file_path.stem}_crop({t}-{y_crop}-{x_crop}).tif', 
+        data_path / f'{file_path.stem}_crop({t:03}-{y_crop:03}-{x_crop:03}).tif', 
         img, check_contrast=False
         )
 
 #%%
 
-viewer = napari.view_image(preprocessed)
+# viewer = napari.view_image(preprocessed)
         
