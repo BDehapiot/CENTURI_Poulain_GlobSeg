@@ -156,4 +156,3 @@ for r, i, y, x in zip(randR, randI, randY, randX):
         f'{data[r][3].stem}_crop({r:02}-{i:04}-{y:04}-{x:04}).tif'
         )    
     io.imsave(path, range_uint8(crop, int_range=0.99), check_contrast=False)
-        

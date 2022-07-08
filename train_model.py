@@ -288,6 +288,19 @@ model.train(
     validation_data=(raw_val, mask_val)
     )
 
+model.export_TF()
+
+#%%
+
+import tensorflow as tf
+
+tf.saved_model.load(
+    Path('models', 'stardist', 'saved_model.pb').resolve(),
+    tags=None, options=None,
+    )
+
+Path('models', 'stardist', 'saved_model.pb').resolve()
+
 #%%
 
 raw_val_pred = np.zeros_like(mask_val)
@@ -303,11 +316,10 @@ viewer = napari.Viewer()
 viewer.add_image(raw_val)
 viewer.add_labels(raw_val_pred)
 
-
 #%%
 
 img = io.imread(
-    Path('data', '20mbar_end_AV_20171019_162451_substack(1-900-5)_t0.tif')    
+    Path('data', 'raw', '20mbar_end_AV_20171019_162451_substack(1-900-5)_t0.tif')    
     )
 
 img = norm_data(img, qlow, qhigh)
@@ -319,6 +331,23 @@ img_pred = model.predict_instances(
     n_tiles=model._guess_n_tiles(img),
     )[0]
 
+img_pred = img_pred.astype('uint16')
+
 viewer = napari.Viewer()
 viewer.add_image(img)
 viewer.add_labels(img_pred)
+
+#%%
+
+
+# import keras
+# from keras import backend as K
+# from keras.models import load_model
+# from keras.models import model_from_json
+
+
+# json_file = open('./models/stardist/config.json', 'r')
+# loaded_model_json = json_file.read()
+# json_file.close()
+# loaded_model = keras.models.model_from_json(loaded_model_json)
+# loaded_model.load_weights("weights_best.h5")
