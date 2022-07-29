@@ -16,7 +16,7 @@ from functions import norm_data, split_data, augment_data
 
 qlow = 0.001
 qhigh = 0.999
-split = 0.25
+split = 0.33
 
 #%% Paths & import
 
@@ -73,7 +73,7 @@ conf = Config2D (
     unet_kernel_size=(3, 3),
     unet_last_activation='relu',
     unet_n_conv_per_depth=2,
-    unet_n_depth=3,
+    unet_n_depth=2, #3
     unet_n_filter_base=32,
     unet_pool=(2, 2),
     unet_prefix='',
@@ -107,9 +107,16 @@ raw_trn, mask_trn = augment_data(
     raw_trn, mask_trn, operations, iterations=raw_trn.shape[0]*100, parallel=False
     )
 
+raw_val, mask_val = augment_data(
+    raw_val, mask_val, operations, iterations=raw_val.shape[0]*100, parallel=False
+    )
+
 # Train model
 model.train(
     raw_trn, mask_trn, validation_data=(raw_val, mask_val)
     )
 
-# train_log()
+# tensorboard --logdir /home/bdehapiot/projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
+
+#%%
+
