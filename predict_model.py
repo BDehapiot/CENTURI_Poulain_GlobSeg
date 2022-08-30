@@ -10,9 +10,9 @@ from functions import process_data, norm_data
 
 #%% Get stack_name
 
-stack_name = '20mbar_end_AV_20171019_162451_substack(1-900-5).tif'
+# stack_name = '20mbar_end_AV_20171019_162451_substack(1-900-5).tif'
 # stack_name = '35mbar_end_05_20170613_151622_substack(1-900-5).tif'
-# stack_name = '50mbar_start_00_20170613_111653_substack(1-900-5).tif'
+stack_name = '50mbar_start_00_20170613_111653_substack(1-900-5).tif'
 
 #%% Paths & import
 
