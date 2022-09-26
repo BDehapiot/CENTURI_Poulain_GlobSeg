@@ -30,10 +30,26 @@ randR = np.random.randint(0, len(data), size=sample_size)
 randI = np.zeros_like(randR)
 randY = np.zeros_like(randR)
 randX = np.zeros_like(randR)
+
 for i in range(randR.shape[0]):    
+    
     randI[i] = np.random.randint(0, data[randR[i]][0].shape[0])
-    randY[i] = np.random.randint(0, data[randR[i]][0].shape[1]-crop_size)
-    randX[i] = np.random.randint(0, data[randR[i]][0].shape[2]-crop_size)    
+    
+    if data[randR[i]][0].shape[1] > crop_size:
+        
+        randY[i] = np.random.randint(0, data[randR[i]][0].shape[1]-crop_size)
+        
+    else:
+        
+        randY[i] = 0
+        
+    if data[randR[i]][0].shape[2] > crop_size:
+        
+        randX[i] = np.random.randint(0, data[randR[i]][0].shape[2]-crop_size)    
+        
+    else:
+        
+        randX[i] = 0
 
 #%% Extract & save cropped data
 
