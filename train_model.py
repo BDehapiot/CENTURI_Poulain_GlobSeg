@@ -46,7 +46,7 @@ conf = Config2D (
     n_channel_in=1,
     n_channel_out=33,
     n_dim=2,
-    n_rays=32,
+    n_rays=128,
     net_conv_after_unet=128,
     net_input_shape=(None, None, 1),
     net_mask_shape=(None, None, 1),
@@ -116,7 +116,7 @@ model.train(
     raw_trn, mask_trn, validation_data=(raw_val, mask_val)
     )
 
-# tensorboard --logdir /home/bdehapiot/projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
+# tensorboard --logdir /home/bdehapiot/Projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
 
 #%%
 

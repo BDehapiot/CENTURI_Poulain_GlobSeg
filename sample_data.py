@@ -11,7 +11,7 @@ from functions import range_uint8, process_data
 sample_size = 50 # number of random cropped images 
 seed = 1 # seed for random indexes
 crop_size = 128 # size of random cropped images 
-radius = 3 # radius for rolling ball background subtration (0 = deactivate)
+radius = 0 # radius for rolling ball background subtration (0 = deactivate)
    
 #%% Open & process raw data
 
