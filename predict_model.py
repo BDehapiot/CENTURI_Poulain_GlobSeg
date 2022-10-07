@@ -24,20 +24,33 @@ stack_name = 'ML30__inlet_donneurFYY_Temp267_x20_DeltaP20mBars_vid0002.tif'
 
 #%% Paths & import
 
-stack = io.imread(Path(Path.cwd(), 'data', 'raw', stack_name))
+stack_path = Path(Path.cwd(), 'data', 'raw', stack_name)
+stack = io.imread(stack_path)
 model = StarDist2D(None, name='stardist', basedir='models')
 
 #%% Predict
 
-t = 0
-
 stack = process_data(stack, radius=radius, parallel=True)
 stack = norm_data(stack, qlow=0.001, qhigh=0.999)
-labels, details = model.predict_instances(stack[t,...])
+
+# frame
+# t = 100
+# labels, details = model.predict_instances(stack[t,...])
+
+# stack
+tmin = 0
+tmax = 100
+labels = np.zeros((tmax, stack.shape[1], stack.shape[2]))
+for t in range(tmin, tmax):
+    labels[t,...], details = model.predict_instances(stack[t,...])    
+
+#%% Save
+
+io.imsave(stack_path.stem + '_predict.tif' , labels.astype('uint16'), check_contrast=False)
 
 #%% Display
 
-viewer = napari.Viewer()
-viewer.add_image(stack[t,...])
-viewer.add_labels(labels)
+# viewer = napari.Viewer()
+# viewer.add_image(stack[t,...])
+# viewer.add_labels(labels)
 # viewer.grid.enabled = True
