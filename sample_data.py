@@ -8,7 +8,7 @@ from functions import range_uint8, process_data
 
 #%% Inputs
 
-sample_size = 50 # number of random cropped images 
+sample_size = 100 # number of random cropped images 
 seed = 1 # seed for random indexes
 crop_size = 128 # size of random cropped images 
 radius = 0 # radius for rolling ball background subtration (0 = deactivate)
