@@ -46,7 +46,7 @@ conf = Config2D (
     n_channel_in=1,
     n_channel_out=33,
     n_dim=2,
-    n_rays=128,
+    n_rays=64,
     net_conv_after_unet=128,
     net_input_shape=(None, None, 1),
     net_mask_shape=(None, None, 1),
@@ -57,24 +57,24 @@ conf = Config2D (
     train_checkpoint_last='weights_last.h5',
     train_completion_crop=32,
     train_dist_loss='mae',
-    train_epochs=32,
+    train_epochs=64,
     train_foreground_only=0.9,
-    train_learning_rate=0.0003,
+    train_learning_rate=0.005, #0.0003
     train_loss_weights=(1, 0.2),
     train_n_val_patches=None,
-    train_patch_size=(128, 128),
+    train_patch_size=(128,128), #(128,128)
     train_reduce_lr={'factor': 0.5, 'min_delta': 0, 'patience': 40},
     train_shape_completion=False,
     train_steps_per_epoch=64,
     train_tensorboard=True,
     unet_activation='relu',
-    unet_batch_norm=False,
-    unet_dropout=0.0,
+    unet_batch_norm=True, #False
+    unet_dropout=0.33, #0.00
     unet_kernel_size=(3, 3),
     unet_last_activation='relu',
-    unet_n_conv_per_depth=2,
-    unet_n_depth=2, #3
-    unet_n_filter_base=32,
+    unet_n_conv_per_depth=3, #2,3
+    unet_n_depth=2, #2
+    unet_n_filter_base=64, #32,64
     unet_pool=(2, 2),
     unet_prefix='',
     use_gpu=True and gputools_available()
@@ -104,11 +104,11 @@ operations = A.Compose([
     ])
 
 raw_trn, mask_trn = augment_data(
-    raw_trn, mask_trn, operations, iterations=raw_trn.shape[0]*100, parallel=False
+    raw_trn, mask_trn, operations, iterations=raw_trn.shape[0]*10, parallel=False
     )
 
 raw_val, mask_val = augment_data(
-    raw_val, mask_val, operations, iterations=raw_val.shape[0]*100, parallel=False
+    raw_val, mask_val, operations, iterations=raw_val.shape[0]*10, parallel=False
     )
 
 # Train model

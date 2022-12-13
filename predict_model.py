@@ -40,7 +40,11 @@ for t in range(tmin, tmax):
 
 #%% Save
 
-io.imsave(stack_path.stem + '_predict.tif' , labels.astype('uint16'), check_contrast=False)
+io.imsave(
+    Path('data/raw/', stack_name.replace('.tif', '_predict.tif')),
+    labels.astype('uint16'), 
+    check_contrast=False
+    )
 
 #%% Display
 
