@@ -4,7 +4,7 @@ import numpy as np
 from skimage import io 
 from pathlib import Path
 
-from functions import range_uint8, process_data
+from functions import process_data
 
 #%% Inputs
 
@@ -58,4 +58,4 @@ for r, i, y, x in zip(randR, randI, randY, randX):
     path = Path('data', 'train', 
         f'{data[r][3].stem}_crop({r:02}-{i:04}-{y:04}-{x:04}).tif'
         )    
-    io.imsave(path, range_uint8(crop, int_range=0.99), check_contrast=False)
+    io.imsave(path, crop.astype('float32'), check_contrast=False)

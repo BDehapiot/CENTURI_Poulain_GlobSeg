@@ -5,53 +5,6 @@ import numpy as np
 from joblib import Parallel, delayed 
 from skimage.restoration import rolling_ball
 
-#%% range_uint8
-
-def range_uint8(img, int_range=0.99):
-
-    ''' 
-    Description
-    
-    Parameters
-    ----------
-    img : ndarray
-        Description        
-        
-    int_range : float
-        Description
-    
-    Returns
-    -------  
-    img : ndarray
-        Description
-        
-    Notes
-    -----   
-    
-    '''
-
-    # Get data type 
-    data_type = (img.dtype).name
-    
-    if data_type == 'uint8':
-        
-        import warnings
-        warnings.warn('Input image is already uint8')
-        
-    else:
-        
-        # Get data intensity range
-        int_min = np.percentile(img, (1-int_range)*100)
-        int_max = np.percentile(img, int_range*100) 
-        
-        # Rescale data
-        img[img<int_min] = int_min
-        img[img>int_max] = int_max 
-        img = (img - int_min)/(int_max - int_min)
-        img = (img*255).astype('uint8')
-    
-    return img
-
 #%%
 
 def process_data(raw, radius=0, parallel=True):

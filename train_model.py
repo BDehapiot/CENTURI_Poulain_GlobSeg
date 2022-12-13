@@ -117,6 +117,7 @@ model.train(
     )
 
 # tensorboard --logdir /home/bdehapiot/Projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
+# tensorboard --logdir \Users\bdeha\Projects\CENTURI_Poulain_GlobSeg\models\stardist\logs
 
 #%%
 

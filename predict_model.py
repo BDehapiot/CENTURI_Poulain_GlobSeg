@@ -14,13 +14,7 @@ radius = 0 # radius for rolling ball background subtration (0 = deactivate)
 
 #%% Get stack_name
 
-# stack_name = '20mbar_end_AV_20171019_162451_substack(1-900-5).tif'
-# stack_name = '35mbar_end_05_20170613_151622_substack(1-900-5).tif'
-# stack_name = '50mbar_start_00_20170613_111653_substack(1-900-5).tif'
-
-stack_name = 'ML30__inlet_donneurFYY_Temp267_x20_DeltaP20mBars_vid0002.tif'
-# stack_name = 'ML30_outlet_donneurCJJ_Temp267_x20_DeltaP50mBars_vid0001.tif'
-# stack_name = 'ML30_outlet_donneurFYY_Temp267_x20_DeltaP20mBars_vid0002.tif'
+stack_name = 'ML30_outlet_Pdrepano_Temp23_x20_DeltaP20mBars_3_substack(1-1000-10).tif'
 
 #%% Paths & import
 
