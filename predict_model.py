@@ -4,6 +4,7 @@ import napari
 import numpy as np
 from skimage import io 
 from pathlib import Path
+from skimage.transform import resize
 from stardist.models import StarDist2D
 
 from functions import process_data, norm_data
@@ -24,31 +25,43 @@ model = StarDist2D(None, name='stardist', basedir='models')
 
 #%% Predict
 
+# Process and normalize
 stack = process_data(stack, radius=radius, parallel=True)
 stack = norm_data(stack, qlow=0.001, qhigh=0.999)
 
-# frame
-# t = 100
-# labels, details = model.predict_instances(stack[t,...])
+# Predict
+prob = []
+for t, frame in enumerate(stack):
+    temp, _ =  model.predict(stack[t,...]) 
+    prob.append(temp)  
 
-# stack
-tmin = 0
-tmax = 100
-labels = np.zeros((tmax, stack.shape[1], stack.shape[2]))
-for t in range(tmin, tmax):
-    labels[t,...], details = model.predict_instances(stack[t,...])    
+#%% Process predictions
+
+prob = np.array(prob)
+prob = resize(prob, stack.shape, preserve_range=True)
+mask = prob > 0.25
 
 #%% Save
 
-io.imsave(
-    Path('data/raw/', stack_name.replace('.tif', '_predict.tif')),
-    labels.astype('uint16'), 
-    check_contrast=False
-    )
+# io.imsave(
+#     Path('data/raw/', stack_name.replace('.tif', '_predict.tif')),
+#     labels.astype('uint16'), 
+#     check_contrast=False
+#     )
+
+# io.imsave(
+#     Path('data/raw/', stack_name.replace('.tif', '_prob.tif')),
+#     prob, 
+#     check_contrast=False
+#     )
 
 #%% Display
 
-# viewer = napari.Viewer()
-# viewer.add_image(stack[t,...])
+# from skimage.transform import resize
+
+viewer = napari.Viewer()
+# viewer.add_image(stack)
 # viewer.add_labels(labels)
+viewer.add_image(prob)
+viewer.add_image(mask)
 # viewer.grid.enabled = True

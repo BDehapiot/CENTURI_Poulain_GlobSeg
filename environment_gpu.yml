@@ -1,24 +1,20 @@
-name: GlobSeg
+name: GlobSeg2
 
 channels:
-  - defaults
-  - nvidia
-    
+  - conda-forge
+  - esri
+
 dependencies:
   - python=3.9
   - conda-forge::pyqt=5.12.*
-  - cudatoolkit=11.6.*
-  - cudnn=8.2.*
+  - napari[all]
   - numpy
   - scipy
   - scikit-image
   - matplotlib-base
   - joblib
-  - napari
+  - tensorflow-gpu
   - pip
   - pip:
-    - stardist
-    - csbdeep
-    - tensorflow==2.6.*
     - albumentations
-    - gputools
+    - segmentation-models
