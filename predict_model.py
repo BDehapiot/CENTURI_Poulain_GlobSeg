@@ -29,17 +29,39 @@ model = StarDist2D(None, name='stardist', basedir='models')
 stack = process_data(stack, radius=radius, parallel=True)
 stack = norm_data(stack, qlow=0.001, qhigh=0.999)
 
-# Predict
+# Labels
+labels = []
+for t, frame in enumerate(stack):
+    temp, details = model.predict_instances(stack[t,...])   
+    labels.append(temp)
+labels = np.array(labels)
+
+# Prob
 prob = []
 for t, frame in enumerate(stack):
     temp, _ =  model.predict(stack[t,...]) 
-    prob.append(temp)  
+    prob.append(temp) 
+prob = np.array(prob)
 
 #%% Process predictions
 
-prob = np.array(prob)
+from skimage.measure import label
+
 prob = resize(prob, stack.shape, preserve_range=True)
-mask = prob > 0.25
+markers = np.zeros_like(prob, dtype='uint16')
+for t, temp in enumerate(prob):
+    markers[t,...] = label(temp>0.5) 
+
+#%% Display
+
+# from skimage.transform import resize
+
+viewer = napari.Viewer()
+viewer.add_image(stack)
+viewer.add_labels(labels)
+# viewer.add_image(prob)
+viewer.add_image(markers>0)
+# viewer.grid.enabled = True
 
 #%% Save
 
@@ -54,14 +76,3 @@ mask = prob > 0.25
 #     prob, 
 #     check_contrast=False
 #     )
-
-#%% Display
-
-# from skimage.transform import resize
-
-viewer = napari.Viewer()
-# viewer.add_image(stack)
-# viewer.add_labels(labels)
-viewer.add_image(prob)
-viewer.add_image(mask)
-# viewer.grid.enabled = True

@@ -9,6 +9,7 @@ import albumentations as aug
 import segmentation_models as sm
 
 from functions import norm_data, split_data, augment_data, process_data
+from skel import pixconn
 
 sm.set_framework('tf.keras')
 sm.framework()
@@ -36,37 +37,44 @@ for path in Path('data', 'train').iterdir():
 raw = np.rollaxis(raw, 2)      
 mask = np.rollaxis(mask, 2) 
 
-#%%
+#%% bounds
 
-from skimage.measure import regionprops, regionprops_table
-from scipy.ndimage import distance_transform_edt
+# bounds = np.zeros_like(mask, dtype=float)
+bounds = []
+for t in range(mask.shape[0]):   
+    temp_bounds = []
+    for idx in range(1, np.max(mask[t,...])+1):
+        temp_mask = mask[t,...] == idx 
+        temp_bnds = pixconn(temp_mask, conn=1) < 4
+        temp_bnds[temp_mask == 0] = 0
+        temp_bounds.append(temp_bnds)
+    # temp_bounds = np.array(temp_bounds)
+    
+viewer = napari.Viewer()
+viewer.add_image(temp_bounds)
+# viewer.add_image(bounds)
 
-for t, frame in enumerate(mask):
-    
-    edm = np.full(frame.shape, 1, dtype=float)    
-    
-    for prop in regionprops(frame):
+#%% edm
+
+# from scipy.ndimage import distance_transform_edt
+# from skimage.morphology import remove_small_holes
+
+# edm = np.zeros_like(mask, dtype=float)
+# for t in range(mask.shape[0]):   
+#     for idx in range(1, np.max(mask[t,...])):
+#         temp = mask[t,...] == idx
+#         temp = remove_small_holes(temp, area_threshold=64)
+#         temp = distance_transform_edt(temp)
+#         edm[t,...] += temp
         
-        y, x = prop.centroid
-        y = int(y); x = int(x)
-        edm[y,x] = 0
-        
-    edm = distance_transform_edt(edm)
-    edm[frame==0] = 0
-    
-
-    
-
-    
-    
-
 #%%
 
 # # Normalize data
 # raw = norm_data(raw)
+# edm = norm_data(edm)
 
 # # Split data
-# raw_trn, mask_trn, raw_val, mask_val = split_data(raw, mask, 0.33)
+# raw_trn, mask_trn, raw_val, mask_val = split_data(raw, edm, 0.33)
 
 # # Augment data
 # operations = aug.Compose([
@@ -106,14 +114,15 @@ for t, frame in enumerate(mask):
 
 # # Fit model
 # model.fit(
-#    x=raw_trn,
-#    y=mask_trn,
-#    batch_size=32,
-#    epochs=64,
-#    validation_data=(raw_val, mask_val),
-#    verbose=1,
+#     x=raw_trn,
+#     y=mask_trn,
+#     batch_size=32,
+#     epochs=64,
+#     validation_data=(raw_val, mask_val),
+#     verbose=1,
 # )
 
+# tensorboard --logdir /home/bdehapiot/Projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
 # tensorboard --logdir /home/bdehapiot/Projects/CENTURI_Poulain_GlobSeg/models/stardist/logs
 
 #%% Predict
@@ -130,5 +139,7 @@ for t, frame in enumerate(mask):
 
 #%% 
 
-viewer = napari.Viewer()
-viewer.add_image(edm)
+# viewer = napari.Viewer()
+# viewer.add_image(edm)
+# viewer.add_image(prediction)
+# viewer.add_image(bounds)
