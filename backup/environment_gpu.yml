@@ -1,0 +1,20 @@
+name: GlobSeg2
+
+channels:
+  - conda-forge
+  - esri
+
+dependencies:
+  - python=3.9
+  - conda-forge::pyqt=5.12.*
+  - napari[all]
+  - numpy
+  - scipy
+  - scikit-image
+  - matplotlib-base
+  - joblib
+  - tensorflow-gpu
+  - pip
+  - pip:
+    - albumentations
+    - segmentation-models

@@ -15,7 +15,14 @@ radius = 0 # radius for rolling ball background subtration (0 = deactivate)
 
 #%% Get stack_name
 
-stack_name = 'ML30_outlet_Pdrepano_Temp23_x20_DeltaP20mBars_3_substack(1-1000-10).tif'
+# stack_name = 'ML30_outlet_Pdrepano_Temp23_x20_DeltaP20mBars_3_substack(1-1000-10).tif'
+# stack_name = 'ML30_outlet_Pdrepano_Temp23_x20_DeltaP20mBars_4_substack(1-1000-10).tif'
+# stack_name = 'ML60_inlett_DonneurFYY_Temp23_x20_DeltaP20mBars_3_substack(1-1000-10).tif'
+# stack_name = 'ML60_inlett_DonneurFYY_Temp23_x20_DeltaP20mBars_4_substack(1-1000-10).tif'
+# stack_name = 'ML60_inlett_Pdrepano_Temp23_x20_DeltaP20mBars_2_substack(1-1000-10).tif'
+# stack_name = 'ML60_inlett_Pdrepano_Temp23_x20_DeltaP20mBars_3_substack(1-1000-10).tif'
+# stack_name = 'ML60_outlet_DonneurFYY_Temp23_x20_DeltaP20mBars_5_substack(1-1000-10).tif'
+stack_name = 'ML60_outlet_DonneurFYY_Temp23_x20_DeltaP20mBars_6_substack(1-1000-10).tif'
 
 #%% Paths & import
 
@@ -36,21 +43,12 @@ for t, frame in enumerate(stack):
     labels.append(temp)
 labels = np.array(labels)
 
-# Prob
-prob = []
-for t, frame in enumerate(stack):
-    temp, _ =  model.predict(stack[t,...]) 
-    prob.append(temp) 
-prob = np.array(prob)
-
-#%% Process predictions
-
-from skimage.measure import label
-
-prob = resize(prob, stack.shape, preserve_range=True)
-markers = np.zeros_like(prob, dtype='uint16')
-for t, temp in enumerate(prob):
-    markers[t,...] = label(temp>0.5) 
+# # Prob
+# prob = []
+# for t, frame in enumerate(stack):
+#     temp, _ =  model.predict(stack[t,...]) 
+#     prob.append(temp) 
+# prob = np.array(prob)
 
 #%% Display
 
@@ -60,16 +58,15 @@ viewer = napari.Viewer()
 viewer.add_image(stack)
 viewer.add_labels(labels)
 # viewer.add_image(prob)
-viewer.add_image(markers>0)
 # viewer.grid.enabled = True
 
 #%% Save
 
-# io.imsave(
-#     Path('data/raw/', stack_name.replace('.tif', '_predict.tif')),
-#     labels.astype('uint16'), 
-#     check_contrast=False
-#     )
+io.imsave(
+    Path('data/raw/', stack_name.replace('.tif', '_predict.tif')),
+    labels.astype('uint16'), 
+    check_contrast=False
+    )
 
 # io.imsave(
 #     Path('data/raw/', stack_name.replace('.tif', '_prob.tif')),
