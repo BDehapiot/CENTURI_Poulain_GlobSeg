@@ -6,7 +6,6 @@ channels:
 dependencies:
   # conda_core
   - python=3.10
-  - numpy=1.24*
   - numba
   - scipy
   - pandas
@@ -24,9 +23,10 @@ dependencies:
   - pip:
     # pip_core
     # pip_spec
-    - stardist
-    - csbdeep
-    - gputools
+    - numpy==1.24.4
+    - stardist==0.9.1
+    - csbdeep==0.8.0
+    - gputools==0.2.13
     # pip_tf_nogpu
     - albumentations
     - segmentation-models

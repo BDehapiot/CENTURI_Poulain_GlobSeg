@@ -1,249 +1,88 @@
-#%% Imports
+#%% Imports -------------------------------------------------------------------
 
 import random
 import numpy as np
 from joblib import Parallel, delayed 
 from skimage.restoration import rolling_ball
 
-#%%
+#%% Function : process_data() -------------------------------------------------
 
-def process_data(raw, radius=0, parallel=True):
-    
-    """
-    Description
-    
-    Parameters
-    ----------
-    raw : ndarray
-        Description
+def process_data(arr, radius=0):
         
-    radius : int
-        Description
-    
-    Returns
-    -------
-    process : ndarray
-        Description
-    
-    Raises
-    ------
-    """
-    
-    # Nested function ---------------------------------------------------------
-    
     def _process_data(temp):
-    
-        # Subtract background
-        process =  temp - rolling_ball(temp, radius=radius)
-        
-        return process
-    
-    # Main function -----------------------------------------------------------
-        
+        return temp - rolling_ball(temp, radius=radius)
+
     # Subtract mean projection
-    temp = raw - np.mean(raw, axis=0)
+    prp = arr - np.mean(arr, axis=0)
     
-    if radius > 0:
-    
-        if parallel:
-     
-            # Run _process_data (parallel)
-            output_list = Parallel(n_jobs=-1)(
-                delayed(_process_data)(
-                    img
-                    )
-                for img in temp
-                )
-                
-        else:
-                
-            # Run _process_data
-            output_list = [_process_data(
-                    img
-                    ) 
-                for img in temp
-                ]
-    
-        # Extract outputs
-        process = np.stack([arrays for arrays in output_list], axis=0)
-        
-    else:   
+    # Subtract background
+    if radius > 0:    
+        outputs = Parallel(n_jobs=-1)(
+            delayed(_process_data)(img) 
+            for img in prp
+            ) 
+        prp = np.stack([data for data in outputs])
             
-        process = temp
-            
-    return process
+    return prp
 
-#%% norm_data
+#%% Function : norm_data() ----------------------------------------------------
 
-def norm_data(raw, qlow=0.001, qhigh=0.999):
+def norm_data(arr, qlow=0.001, qhigh=0.999):
     
-    """
-    Description
+    arr = arr.astype("float32")
     
-    Parameters
-    ----------    
-    raw : ndarray
-        Description
-        
-    qlow : float
-        Description
-        
-    qhigh : float
-        Description
-    
-    Returns
-    -------    
-    raw_trn : ndarray or list of ndarray
-        Description
-    
-    Raises
-    ------
-    """
-    
-    raw = raw.astype('float')
-    
-    for i, img in enumerate(raw):
+    for i, img in enumerate(arr):
         
         # Get lower and higher threshold
-        tlow = np.quantile(img, qlow)
-        thigh = np.quantile(img, qhigh)
+        low = np.quantile(img, qlow)
+        hgh = np.quantile(img, qhigh)
         
         # Normalize image
-        img = (img - tlow) / (thigh - tlow)
+        img = (img - low) / (hgh - low)
         img[img > 1] = 1
         img[img < 0] = 0
         
-        # Update raw
-        raw[i,...] = img
+        # Update arr
+        arr[i,...] = img
         
-    return raw             
+    return arr           
 
-#%% split_data
+#%% Function : split_data() ---------------------------------------------------
 
-def split_data(raw, mask, split):
-    
-    """
-    Description
-    
-    Parameters
-    ----------
-    raw : ndarray
-        Description
+def split_data(arr, mask, split):
         
-    mask : ndarray
-        Description
-        
-    split : int
-        Description
+    nI = arr.shape[0]
     
-    Returns
-    -------
-    raw_trn : ndarray
-        Description
-        
-    mask_trn : ndarray
-        Description
-        
-    raw_val : ndarray
-        Description
-        
-    mask_val : ndarray
-        Description
-    
-    Raises
-    ------
-    """
-    
-    nI = raw.shape[0]
-    
-    # Define index
+    # Define indexes
     idx = random.sample(range(0, nI), nI)
     trn_idx = idx[0:int(nI*(1-split))]
     val_idx = idx[-(nI-len(trn_idx)):]
     
     # Extract data    
-    raw_trn = raw[trn_idx,...]
+    arr_trn = arr[trn_idx,...]
     mask_trn = mask[trn_idx,...]
-    raw_val = raw[val_idx,...]
+    arr_val = arr[val_idx,...]
     mask_val = mask[val_idx,...]
 
-    return raw_trn, mask_trn, raw_val, mask_val
+    return arr_trn, mask_trn, arr_val, mask_val
 
-#%% augment_data
+#%% Function : augment_data() -------------------------------------------------
 
-def augment_data(raw, mask, operations, iterations=256, parallel=True):
-    
-    """
-    Description
-    
-    Parameters
-    ----------
-    raw : ndarray
-        Description
-        
-    mask : ndarray
-        Description
-        
-    operations : compose object (see albumentation)
-        Description
-        
-    iterations : int
-        Description
-            
-    parallel : bool
-        Description
-    
-    Returns
-    -------
-    raw_aug : ndarray
-        Description
-        
-    mask_aug : ndarray
-        Description
+def augment_data(arr, mask, operations, iterations=256):
 
-    Raises
-    ------
-    """
-    
-    # Nested function ---------------------------------------------------------
-    
-    def _augment_data(raw, mask, operations):
-        
-        rand = random.randint(0, raw.shape[0]-1)
-        outputs = operations(image=raw[rand,:,:], mask=mask[rand,:,:])
-            
-        raw_aug = outputs['image']
+    def _augment_data(arr, mask, operations):
+        rand = random.randint(0, arr.shape[0]-1)
+        outputs = operations(image=arr[rand,:,:], mask=mask[rand,:,:])
+        arr_aug = outputs['image']
         mask_aug = outputs['mask']
-        
-        return raw_aug, mask_aug
+        return arr_aug, mask_aug
     
-    # Main function -----------------------------------------------------------
-        
-    if parallel:
- 
-        # Run _augment_data (parallel)
-        output_list = Parallel(n_jobs=-1)(
-            delayed(_augment_data)(
-                raw,
-                mask,
-                operations
-                )
-            for i in range(iterations)
-            )
-            
-    else:
-            
-        # Run _augment_data
-        output_list = [_augment_data(
-                raw,
-                mask,
-                operations
-                ) 
-            for i in range(iterations)
-            ]
-
-    # Extract outputs
-    raw_aug = np.stack([arrays[0] for arrays in output_list], axis=0)
-    mask_aug = np.stack([arrays[1] for arrays in output_list], axis=0)
+    # Augment data
+    outputs = Parallel(n_jobs=-1)(
+        delayed(_augment_data)(arr, mask, operations)
+        for i in range(iterations)
+        )
+    arr_aug = np.stack([data[0] for data in outputs], axis=0)
+    mask_aug = np.stack([data[1] for data in outputs], axis=0)
     
-    return raw_aug, mask_aug
+    return arr_aug, mask_aug
